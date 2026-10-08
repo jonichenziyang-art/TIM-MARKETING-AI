@@ -551,29 +551,36 @@ export const generateAdStrategy = async (data: any) => {
 };
 
 export const generateStudioAIContent = async (data: any, aspectRatio: string = '1:1') => {
+  const safeData = data || {};
   const { 
-    physicalDescription, 
-    basicClothingStyle, 
-    pose, 
-    posePrompt,
-    cameraAngle, 
-    cameraAnglePrompt,
-    expression, 
-    expressionPrompt,
-    changeClothes, 
-    changePants, 
-    addAccessories, 
-    backgroundChoice, 
-    backgroundPrompt,
-    precisionEngine, 
-    jumlahHasil, 
-    precisionSeed
-  } = data;
+    physicalDescription = '', 
+    basicClothingStyle = '', 
+    pose = 'Berdiri percaya diri', 
+    posePrompt = '',
+    cameraAngle = 'Eye Level', 
+    cameraAnglePrompt = '',
+    expression = 'Tersenyum ramah', 
+    expressionPrompt = '',
+    changeClothes = '', 
+    changePants = '', 
+    addAccessories = '', 
+    backgroundChoice = 'Studio Minimalis', 
+    backgroundPrompt = '',
+    precisionEngine = '95', 
+    jumlahHasil = 2, 
+    precisionSeed = Math.floor(Math.random() * 1000000).toString()
+  } = safeData;
 
-  const constructionPrompt = `Create a high-quality, photorealistic image of a character.
+  let constructionPrompt = '';
+  if (physicalDescription && physicalDescription.length > 50 && (!posePrompt && !cameraAnglePrompt)) {
+    constructionPrompt = physicalDescription;
+    if (basicClothingStyle) constructionPrompt += `. Style: ${basicClothingStyle}`;
+    if (backgroundPrompt) constructionPrompt += `. Background: ${backgroundPrompt}`;
+  } else {
+    constructionPrompt = `Create a high-quality, photorealistic image of a character.
   CHARACTER DNA:
-  - Physical: ${physicalDescription}
-  - Style: ${basicClothingStyle}
+  - Physical: ${physicalDescription || 'Professional person'}
+  - Style: ${basicClothingStyle || 'Modern casual'}
   
   POSE & COMPOSITION:
   - Pose: ${pose}${posePrompt ? ` (${posePrompt})` : ''}
@@ -595,14 +602,16 @@ export const generateStudioAIContent = async (data: any, aspectRatio: string = '
   - Seed: ${precisionSeed}
   
   IMPORTANT: No text, watermarks, or logos in the image.`;
+  }
 
-  const results = [];
+  const count = Math.min(Math.max(Number(jumlahHasil) || 2, 1), 4);
+  const results: string[] = [];
   
-  for (let i = 0; i < jumlahHasil; i++) {
+  for (let i = 0; i < count; i++) {
     const fallbackUrl = await generateFreeFallbackImage(constructionPrompt, aspectRatio);
     results.push(fallbackUrl);
     
-    if (jumlahHasil > 1) await new Promise(resolve => setTimeout(resolve, 50));
+    if (count > 1) await new Promise(resolve => setTimeout(resolve, 50));
   }
 
   return results;

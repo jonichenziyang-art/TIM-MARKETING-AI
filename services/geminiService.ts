@@ -77,7 +77,7 @@ async function callProxy(functionName: string, payload: any) {
     response = await fetch(`/api/gemini/${functionName}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify({ ...payload, functionName })
     });
   } catch (networkErr: any) {
     throw new Error(`Gagal menghubungi server: ${networkErr?.message || 'Koneksi terputus'}`);
@@ -89,15 +89,19 @@ async function callProxy(functionName: string, payload: any) {
       const err = await response.json();
       if (err?.error) message = err.error;
     } catch {
+      // response is not JSON (e.g. Vercel edge error)
+    }
+
+    if (!message) {
       if (response.status === 404) {
         message = `Endpoint API /api/gemini/${functionName} tidak ditemukan (404). Pastikan backend serverless Vercel aktif.`;
       } else if (response.status === 413) {
-        message = `Ukuran data/foto melebihi batas server (413 Content Too Large). Sistem telah mengoptimalkan ukuran foto secara otomatis, silakan coba lagi.`;
+        message = `Ukuran data/foto melebihi batas server (413 Content Too Large). Sistem telah mengoptimalkan kompresi foto otomatis, silakan coba lagi.`;
       } else {
         message = `Server error HTTP ${response.status}: Silakan periksa Environment Variables atau Vercel Logs.`;
       }
     }
-    throw new Error(message || `HTTP error ${response.status}`);
+    throw new Error(message);
   }
   return response.json();
 }

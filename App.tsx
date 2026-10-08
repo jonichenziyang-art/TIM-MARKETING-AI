@@ -121,24 +121,10 @@ const SystemInfoModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => 
 
 const LoadingScreen = ({ onComplete }: { onComplete: () => void }) => {
   const [isReady, setIsReady] = useState(false);
-  const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // Initialize and play background music
-    audioRef.current = new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_78390a5c6a.mp3');
-    audioRef.current.volume = 0.2;
-    audioRef.current.loop = true;
-    audioRef.current.play().catch(err => console.log("Autoplay blocked:", err));
-
-    const timer = setTimeout(() => setIsReady(true), 3000);
-    
-    return () => {
-      clearTimeout(timer);
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
+    const timer = setTimeout(() => setIsReady(true), 1800);
+    return () => clearTimeout(timer);
   }, []);
 
   return (

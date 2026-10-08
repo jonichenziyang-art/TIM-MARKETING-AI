@@ -69,15 +69,11 @@ const DashboardView: React.FC<{ onNavigate: (view: AppView) => void }> = ({ onNa
 
         {/* Trending Banner */}
         <div className="relative rounded-[2rem] p-8 sm:p-10 overflow-hidden shadow-2xl bg-gradient-to-br from-violet-950/80 via-[#0a0e1c] to-emerald-950/70 border border-violet-500/20">
-          <video 
-            autoPlay 
-            loop 
-            muted 
-            playsInline 
-            className="absolute inset-0 w-full h-full object-cover opacity-25 mix-blend-overlay"
-          >
-            <source src="https://cdn.pixabay.com/video/2023/03/12/154341-807261244_large.mp4" type="video/mp4" />
-          </video>
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute -top-24 -left-24 w-96 h-96 bg-violet-600/20 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-blue-500/10 rounded-full blur-2xl" />
+          </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
           <div className="relative z-10 flex flex-col h-full justify-between min-h-[240px]">
             <div>

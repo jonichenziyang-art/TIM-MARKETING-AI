@@ -147,8 +147,8 @@ const StudioAI: React.FC = () => {
   };
 
   const handleGenerate = async () => {
-    if (referenceImages.length === 0) {
-      alert("Silakan unggah minimal satu foto referensi karakter.");
+    if (referenceImages.length === 0 && !physicalDescription.trim()) {
+      alert("Silakan unggah minimal satu foto referensi karakter atau isi deskripsi visual terlebih dahulu.");
       return;
     }
 
