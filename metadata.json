@@ -1,0 +1,8 @@
+{
+  "name": "TIM MARKETING AI",
+  "description": "An all-in-one AI marketing suite for generating ad content, videos, voiceovers, and analyzing campaign performance with smart recommendations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
