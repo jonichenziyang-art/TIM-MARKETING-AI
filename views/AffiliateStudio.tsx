@@ -35,6 +35,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { generateVideoPrompt, generateAudio, generateAestheticProductPhoto, editAdImage } from '../services/geminiService';
 import { downloadImage, processImageForDownload } from '../utils/downloadUtils';
+import { compressImageFile } from '../utils/imageCompression';
 
 interface Scene {
   sceneNumber: number;
@@ -135,12 +136,15 @@ const AffiliateStudio: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const affiliatorInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string | null) => void) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string | null) => void) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setter(reader.result as string);
-      reader.readAsDataURL(file);
+      try {
+        const compressed = await compressImageFile(file, 1024, 0.8);
+        setter(compressed);
+      } catch (err) {
+        console.warn('Error compressing uploaded file:', err);
+      }
     }
   };
 

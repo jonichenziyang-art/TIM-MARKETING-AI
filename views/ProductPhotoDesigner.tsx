@@ -21,6 +21,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useCooldown } from '../hooks/useCooldown';
 import { downloadImage, processImageForDownload } from '../utils/downloadUtils';
+import { compressImageFile } from '../utils/imageCompression';
 
 const InputField = ({ label, name, value, onChange, placeholder, icon: Icon }: any) => (
   <div className="space-y-2">
@@ -82,12 +83,15 @@ const ProductPhotoDesigner: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setUploadedImage(reader.result as string);
-      reader.readAsDataURL(file);
+      try {
+        const compressed = await compressImageFile(file, 1024, 0.8);
+        setUploadedImage(compressed);
+      } catch (err) {
+        console.warn('Error compressing product image:', err);
+      }
     }
   };
 

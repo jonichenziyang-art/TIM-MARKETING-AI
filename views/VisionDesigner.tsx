@@ -8,6 +8,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { useCooldown } from '../hooks/useCooldown';
 import { downloadText, downloadImage, processImageForDownload } from '../utils/downloadUtils';
+import { compressImageFile } from '../utils/imageCompression';
 
 const InputField = ({ label, name, value, onChange, placeholder, icon: Icon }: any) => (
   <div className="space-y-2">
@@ -76,12 +77,15 @@ const ImageUploadBox = ({ label, icon: Icon, image, onUpload, onClear, subLabel 
         onClick={() => fileInputRef.current?.click()}
         className={`relative group h-28 border-2 border-dashed rounded-[1.5rem] flex flex-col items-center justify-center transition-all cursor-pointer ${image ? 'border-violet-500/50 bg-violet-500/10' : 'border-white/10 hover:border-violet-500/40 bg-white/5 hover:bg-white/10'}`}
       >
-        <input type="file" ref={fileInputRef} onChange={(e) => {
+        <input type="file" ref={fileInputRef} onChange={async (e) => {
           const file = e.target.files?.[0];
           if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => onUpload(reader.result as string);
-            reader.readAsDataURL(file);
+            try {
+              const compressed = await compressImageFile(file, 1024, 0.8);
+              onUpload(compressed);
+            } catch (err) {
+              console.warn('Error compressing asset:', err);
+            }
           }
         }} accept="image/*" className="hidden" />
         {image ? (

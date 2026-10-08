@@ -68,6 +68,8 @@ function createWavFromAudioBuffer(audioBuffer: AudioBuffer): Blob {
   return new Blob([buffer], { type: 'audio/wav' });
 }
 
+import { compressBase64Image } from '../utils/imageCompression';
+
 // Helper to handle POST requests to our proxy backend
 async function callProxy(functionName: string, payload: any) {
   let response: Response;
@@ -89,6 +91,8 @@ async function callProxy(functionName: string, payload: any) {
     } catch {
       if (response.status === 404) {
         message = `Endpoint API /api/gemini/${functionName} tidak ditemukan (404). Pastikan backend serverless Vercel aktif.`;
+      } else if (response.status === 413) {
+        message = `Ukuran data/foto melebihi batas server (413 Content Too Large). Sistem telah mengoptimalkan ukuran foto secara otomatis, silakan coba lagi.`;
       } else {
         message = `Server error HTTP ${response.status}: Silakan periksa Environment Variables atau Vercel Logs.`;
       }
@@ -109,22 +113,38 @@ export const chatWithAnalyzer = async (contextData: any, userMessage: string, ch
 };
 
 export const generateAestheticProductPhoto = async (data: any) => {
-  const res = await callProxy('generateAestheticProductPhoto', { data });
+  const cleanData = { ...data };
+  if (cleanData.image && typeof cleanData.image === 'string' && cleanData.image.length > 350000) {
+    cleanData.image = await compressBase64Image(cleanData.image, 1024, 0.8);
+  }
+  const res = await callProxy('generateAestheticProductPhoto', { data: cleanData });
   return res.result;
 };
 
 export const generateAdImage = async (data: any) => {
-  const res = await callProxy('generateAdImage', { data });
+  const cleanData = { ...data };
+  if (cleanData.image && typeof cleanData.image === 'string' && cleanData.image.length > 350000) {
+    cleanData.image = await compressBase64Image(cleanData.image, 1024, 0.8);
+  }
+  const res = await callProxy('generateAdImage', { data: cleanData });
   return res.result;
 };
 
 export const editAdImage = async (base64Image: string, prompt: string, aspectRatio: string) => {
-  const res = await callProxy('editAdImage', { base64Image, prompt, aspectRatio });
+  const compressed = await compressBase64Image(base64Image, 1024, 0.8);
+  const res = await callProxy('editAdImage', { base64Image: compressed, prompt, aspectRatio });
   return res.result;
 };
 
 export const generateVideoPrompt = async (data: any) => {
-  const res = await callProxy('generateVideoPrompt', { data });
+  const cleanData = { ...data };
+  if (cleanData.modelImage && typeof cleanData.modelImage === 'string' && cleanData.modelImage.length > 350000) {
+    cleanData.modelImage = await compressBase64Image(cleanData.modelImage, 1024, 0.8);
+  }
+  if (cleanData.productImage && typeof cleanData.productImage === 'string' && cleanData.productImage.length > 350000) {
+    cleanData.productImage = await compressBase64Image(cleanData.productImage, 1024, 0.8);
+  }
+  const res = await callProxy('generateVideoPrompt', { data: cleanData });
   return res.result;
 };
 
@@ -156,7 +176,11 @@ export const generateAdStrategy = async (data: any) => {
 };
 
 export const generateStudioAIContent = async (data: any, aspectRatio: string = '1:1') => {
-  const res = await callProxy('generateStudioAIContent', { data, aspectRatio });
+  const cleanData = { ...data };
+  if ('referenceImages' in cleanData) {
+    delete cleanData.referenceImages;
+  }
+  const res = await callProxy('generateStudioAIContent', { data: cleanData, aspectRatio });
   return res.result;
 };
 

@@ -26,6 +26,7 @@ import { usePersistentState } from '../hooks/usePersistentState';
 import { generateStudioAIContent } from '../services/geminiService';
 import { useCooldown } from '../hooks/useCooldown';
 import { downloadImage, processImageForDownload } from '../utils/downloadUtils';
+import { compressImageFile } from '../utils/imageCompression';
 
 const SectionHeader = ({ icon: Icon, title, subtitle }: { icon: any, title: string, subtitle?: string }) => (
   <div className="flex items-center gap-3 mb-6">
@@ -114,17 +115,27 @@ const StudioAI: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []) as File[];
     if (files.length === 0) return;
 
-    files.slice(0, 3 - referenceImages.length).forEach((file: File) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setReferenceImages(prev => [...prev, reader.result as string]);
-      };
-      reader.readAsDataURL(file);
-    });
+    const availableSlots = 3 - referenceImages.length;
+    const selectedFiles = files.slice(0, availableSlots);
+
+    for (const file of selectedFiles) {
+      try {
+        const compressedBase64 = await compressImageFile(file, 1024, 0.8);
+        if (compressedBase64) {
+          setReferenceImages(prev => [...prev, compressedBase64]);
+        }
+      } catch (err) {
+        console.warn('Error compressing image:', err);
+      }
+    }
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const removeImage = (index: number) => {
@@ -137,7 +148,7 @@ const StudioAI: React.FC = () => {
 
   const handleGenerate = async () => {
     if (referenceImages.length === 0) {
-      alert("Please upload at least one reference image.");
+      alert("Silakan unggah minimal satu foto referensi karakter.");
       return;
     }
 
@@ -161,13 +172,13 @@ const StudioAI: React.FC = () => {
         precisionEngine,
         jumlahHasil,
         aspectRatio,
-        precisionSeed,
-        referenceImages
+        precisionSeed
       }, aspectRatio);
       setResults(images);
       startCooldown(60);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Studio AI Generation failed:", error);
+      alert(error?.message || "Gagal menghasilkan gambar StudioAI. Silakan coba lagi.");
     } finally {
       setIsLoading(false);
     }
