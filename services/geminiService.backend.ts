@@ -1,7 +1,13 @@
 
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 
-const getAI = () => new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
+const getAI = () => {
+  const apiKey = process.env.GEMINI_API_KEY || process.env.API_KEY || process.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY belum dikonfigurasi di Environment Variables Vercel. Silakan tambahkan GEMINI_API_KEY di Vercel Settings > Environment Variables.');
+  }
+  return new GoogleGenAI({ apiKey });
+};
 
 const RATIO_MAP: Record<string, string> = { 
   '1:1': '1:1', 
@@ -50,7 +56,7 @@ export const analyzePerformance = async (filesData: { fileName: string, campaign
   try {
     const ai = getAI();
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-3.8-flash',
       contents: `${systemInstruction}\n\nDATA IKLAN:\n${dataString}\n\nOUTPUT: JSON. Verdict: UPSCALE, DOWNSCALE, KILL, atau CONTINUE.`,
       config: {
         responseMimeType: "application/json",
@@ -158,7 +164,7 @@ export const chatWithAnalyzer = async (contextData: any, userMessage: string, ch
   try {
     const ai = getAI();
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-3.8-flash',
       contents: `${systemInstruction}\n\nRIWAYAT CHAT:\n${historyString}\n\nPERTANYAAN USER: ${userMessage}`,
     });
     return response.text;
@@ -277,7 +283,7 @@ export const generateVideoPrompt = async (data: any) => {
   try {
     const ai = getAI();
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-3.8-flash',
       contents: { parts },
       config: { 
         responseMimeType: "application/json",
@@ -367,7 +373,7 @@ export const generateAudio = async (text: string, voiceName: string = 'Kore') =>
   try {
     const ai = getAI();
     const response = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-tts-preview',
+      model: 'gemini-3.8-flash-tts',
       contents: [{ parts: [{ text: text }] }],
       config: {
         responseModalities: [Modality.AUDIO],
@@ -387,7 +393,7 @@ export const generateCopyVariations = async (data: any) => {
   try {
     const ai = getAI();
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-3.8-flash',
       contents: `Buat 3 variasi copywriting Bahasa Indonesia berkonversi tinggi untuk ${data.brandName}. Gunakan formula AIDA, PAS, dan Storytelling. Berikan hook yang sangat memikat, body yang emosional dan fokus pada benefit, CTA yang persuasif, serta hashtag yang relevan.`,
       config: {
         responseMimeType: "application/json",
@@ -461,7 +467,7 @@ export const generateLandingPageStructure = async (data: any) => {
   try {
     const ai = getAI();
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-3.8-flash',
       contents: prompt,
     });
     return response.text;
@@ -512,7 +518,7 @@ export const generateAdStrategy = async (data: any) => {
   try {
     const ai = getAI();
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-3.8-flash',
       contents: `Rancang strategi Meta Ads Bahasa Indonesia yang komprehensif, profesional, dan berorientasi hasil untuk ${data.brandName}. Berikan analisis audiens detail, pembagian kampanye TOFU (Cold), MOFU (Warm), dan BOFU (Hot) dengan budget ideal, rekomendasi kreatif iklan (kombinasi video & gambar), serta key metrics yang wajib dipantau seperti CTR, CPC, CPM, dan ROAS target.`,
     });
     return response.text;
@@ -648,7 +654,7 @@ Setiap menerima input, identifikasi \`action_type\`-nya dan keluarkan HANYA form
   try {
     const ai = getAI();
     const response = await ai.models.generateContent({
-      model: 'gemini-3.5-flash',
+      model: 'gemini-3.8-flash',
       contents: `${systemInstruction}\n\nINPUT PENGGUNA:\n${userInput}`,
       config: {
         responseMimeType: "application/json",

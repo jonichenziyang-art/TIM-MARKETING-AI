@@ -70,14 +70,30 @@ function createWavFromAudioBuffer(audioBuffer: AudioBuffer): Blob {
 
 // Helper to handle POST requests to our proxy backend
 async function callProxy(functionName: string, payload: any) {
-  const response = await fetch(`/api/gemini/${functionName}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
+  let response: Response;
+  try {
+    response = await fetch(`/api/gemini/${functionName}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch (networkErr: any) {
+    throw new Error(`Gagal menghubungi server: ${networkErr?.message || 'Koneksi terputus'}`);
+  }
+
   if (!response.ok) {
-    const err = await response.json().catch(() => ({ error: 'Unknown server error' }));
-    throw new Error(err.error || `HTTP error ${response.status}`);
+    let message = '';
+    try {
+      const err = await response.json();
+      if (err?.error) message = err.error;
+    } catch {
+      if (response.status === 404) {
+        message = `Endpoint API /api/gemini/${functionName} tidak ditemukan (404). Pastikan backend serverless Vercel aktif.`;
+      } else {
+        message = `Server error HTTP ${response.status}: Silakan periksa Environment Variables atau Vercel Logs.`;
+      }
+    }
+    throw new Error(message || `HTTP error ${response.status}`);
   }
   return response.json();
 }
